@@ -1,0 +1,7 @@
+chromadb
+sentence-transformers
+langchain-text-splitters
+openai
+PyMuPDF
+streamlit
+wget
