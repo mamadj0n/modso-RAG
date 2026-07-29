@@ -88,8 +88,8 @@ if st.session_state['pdf_downloaded'] and st.session_state['collection']:
                     pages_info = ", ".join([f"صفحه {p['page']}" for p in pages_used]) if pages_used else "ناشناس"
                     st.info(f"📖 پاسخ استخراج‌شده از صفحات: {pages_info}")
 
-            except Exception as e:
-                st.error(f"خطایی رخ داد: {e}\nلطفاً از تکمیل بودن تنظیمات RAG اطمینان حاصل کنید.")
+            #except Exception as e:
+            #    st.error(f"خطایی رخ داد: {e}\nلطفاً از تکمیل بودن تنظیمات RAG اطمینان حاصل کنید.")
         else:
             st.warning("لطفاً یک سوال وارد کنید.")
 else:
