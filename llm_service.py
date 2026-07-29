@@ -11,7 +11,10 @@ def ask_rag_openrouter(question: str, context: List[str], pages: List[Dict[str, 
     messages = [
         {
             "role": "system",
-            "content": "You are an expert ML professor. Answer the question accurately based ONLY on the provided context. If not found in context, say you don't know."
+            "content": """
+            You are an expert ML professor. Answer the question accurately based ONLY on the provided context. If not found in context, say you don't know.
+            Formatting Rule: Always format LaTeX formulas using standard dollar signs. Use single $...$ for inline math and double $$...$$ for block display equations. Do NOT use \( or \[ delimiters.
+            """
         },
         {
             "role": "user",
