@@ -32,16 +32,21 @@ def install_and_load_dependencies():
     print("Text splitter initialized.")
     return embedding_model, chroma_client, text_splitter
 
-def download_pdf(url: str):
-    """Downloads a PDF file from a given URL."""
-    file_name = url.split('/')[-1]
-    if not os.path.exists(file_name):
-        print(f"Downloading {file_name}...")
-        subprocess.run(["wget", url, "-q"], capture_output=True, text=True)
-        print(f"File downloaded to: {file_name}")
-    else:
-        print(f"{file_name} already exists.")
-    return file_name
+def download_pdf(url):
+  file_name = url.split("/")[-1]
+  if not os.path.exists(file_name):
+    print(f"Downloading {file_name}...")
+    response = requests.get(url)
+    response.raise_for_status()  # بررسی صحت دانلود و عدم وجود ارور ۴۰۴ یا ۵۰۰
+
+    with open(file_name, "wb") as f:
+      f.write(response.content)
+
+    print(f"File downloaded to: {file_name}")
+  else:
+    print(f"{file_name} already exists.")
+
+  return file_name
 
 if __name__ == '__main__':
     github_raw_file_url = 'https://github.com/probml/pml-book/releases/download/2025-04-18/book1.pdf'
