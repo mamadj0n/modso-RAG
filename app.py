@@ -81,8 +81,12 @@ if st.session_state['pdf_downloaded'] and st.session_state['collection']:
                         OPENROUTER_API_KEY
                     )
 
-                    st.write("### پاسخ AI:")
-                    st.write(answer)
+                    answer = re.sub(r"\\\[(.*?)\\\]", r"$$\1$$", answer, flags=re.DOTALL)
+                    answer = re.sub(r"\\\((.*?)\\\)", r"$\1$", answer, flags=re.DOTALL)
+                    answer = re.sub(r"^\s*\[\s*(.*?)\s*\]\s*$", r"$$\1$$", answer, flags=re.M)
+                    
+                    st.markdown("### پاسخ AI:")
+                    st.markdown(answer)
 
                     pages_info = ", ".join([f"صفحه {p['page']}" for p in pages_used]) if pages_used else "ناشناس"
                     st.info(f"📖 پاسخ استخراج‌شده از صفحات: {pages_info}")
