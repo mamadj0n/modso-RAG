@@ -22,8 +22,9 @@ if 'collection' not in st.session_state:
 if 'pdf_downloaded' not in st.session_state:
     st.session_state['pdf_downloaded'] = False
 
-OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", st.secrets.get("OPENROUTER_API_KEY"))
-
+OPENROUTER_API_KEY = st.secrets.get("OPENROUTER_API_KEY") or os.environ.get(
+    "OPENROUTER_API_KEY"
+)
 if not OPENROUTER_API_KEY:
     st.error("OpenRouter API Key not found. Please set the OPENROUTER_API_KEY environment variable or add it to `secrets.toml`.")
     st.stop()
