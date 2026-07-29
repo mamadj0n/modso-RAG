@@ -33,10 +33,9 @@ if not OPENROUTER_API_KEY:
 with st.sidebar:
     st.header("تنظیمات RAG")
     github_raw_file_url = st.text_input(
-        "آدرس URL فایل PDF",
+        "آدرس URL فایل PDF (لینک باید با فرمت (.pdf) باشه)",
         value='https://github.com/probml/pml-book/releases/download/2025-04-18/book1.pdf'
     )
-    collection_name_input = st.text_input("نام کالکشن ChromaDB", value="pdf_1000_pages")
 
     if st.button("راه‌اندازی سیستم RAG"):
         with st.spinner("در حال راه‌اندازی سیستم RAG..."):
@@ -55,7 +54,7 @@ with st.sidebar:
                 st.session_state['embedding_model'],
                 st.session_state['text_splitter'],
                 st.session_state['chroma_client'],
-                collection_name=collection_name_input
+                collection_name='book'
             )
             st.session_state['collection'] = collection
             st.success("سیستم RAG با موفقیت راه‌اندازی شد!")
