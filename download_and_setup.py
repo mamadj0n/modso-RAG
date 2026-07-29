@@ -1,6 +1,7 @@
 
 import sys
 import os
+import requests
 import subprocess
 from sentence_transformers import SentenceTransformer
 import chromadb
