@@ -13,16 +13,20 @@ st.set_page_config(page_title="RAG System", layout="wide")
 st.title("📚 سیستم پرسش و پاسخ RAG")
 st.markdown("سوالات خود را بر اساس محتوای فایل PDF بپرسید.")
 
-# --- 4. بهینه‌سازی بارگذاری مدل‌ها با Cache (کاهش چشمگیر مصرف RAM و سرعت بالا) ---
+
+# --- بهینه‌سازی بارگذاری مدل‌ها با Cache ---
 @st.cache_resource(show_spinner="در حال بارگذاری مدل‌های امبدینگ و تنظیمات پایه...")
 def get_rag_dependencies():
   return install_and_load_dependencies()
 
+
 # مقداردهی متغیرهای سشن
 if "collection" not in st.session_state:
   st.session_state["collection"] = None
+if "processed_files" not in st.session_state:
+  st.session_state["processed_files"] = []  # تاریخچه فایل‌ها
 
-# بررسی وجود کلید API بدون متوقف کردن کامل برنامه برای تست‌های غیر-LLM
+# بررسی وجود کلید API
 OPENROUTER_API_KEY = st.secrets.get("OPENROUTER_API_KEY") or os.environ.get(
     "OPENROUTER_API_KEY"
 )
@@ -61,27 +65,23 @@ with st.sidebar:
 
     try:
       with st.spinner("در حال پردازش فایل و ساخت دیتابیس برداری..."):
-        # بارگذاری مدل‌ها فقط یک‌بار
         embedding_model, chroma_client, text_splitter = get_rag_dependencies()
 
-        # ۱ و ۱۰. مدیریت ایمن فایل آپلود شده با tempfile و UUID
         if source_type == "آپلود فایل PDF":
           if not uploaded_file:
             st.error("لطفاً ابتدا یک فایل PDF آپلود کنید.")
             st.stop()
 
-          # ساخت فایل موقت امن جهت جلوگیری از تداخل اسم فایل‌ها و کاراکترهای خاص
           temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
           temp_file.write(uploaded_file.getbuffer())
           temp_file.close()
           pdf_path = temp_file.name
           is_temp_file = True
+          display_name = uploaded_file.name
 
-        # ۱۱. بررسی اعتبار و پسوند URL قبل از دانلود
         else:
           url = github_raw_file_url.strip()
           if not url.lower().endswith(".pdf"):
-            # بررسی Content-Type سرور
             try:
               head_resp = requests.head(url, timeout=5)
               content_type = head_resp.headers.get("Content-Type", "")
@@ -92,13 +92,11 @@ with st.sidebar:
               st.error("آدرس URL وارد شده معتبر نیست یا در دسترس نمی‌باشد.")
               st.stop()
 
-          # ۳. دانلود PDF (بررسی عدم دانلود مجدد داخل تابع انجام می‌شود)
           pdf_path = download_pdf(url)
+          display_name = url.split("/")[-1]
 
-        # ۲. استفاده از نام یکتا (UUID) برای هر Collection در ChromaDB
         unique_collection_name = f"col_{uuid.uuid4().hex}"
 
-        # ۵. پردازش فایل PDF با مدیریت خطا (Try-Except)
         collection = process_pdf_into_vector_store(
             pdf_path,
             embedding_model,
@@ -108,18 +106,35 @@ with st.sidebar:
         )
 
         st.session_state["collection"] = collection
+
+        # ذخیره اطلاعات فایل در لیست برای نمایش در جدول
+        st.session_state["processed_files"].append(
+            {"نام فایل": display_name, "روش دریافت": source_type}
+        )
+
         st.success("سیستم RAG با موفقیت راه‌اندازی شد!")
 
     except Exception as e:
       st.error(f"خطایی هنگام پردازش PDF یا ساخت Vector Store رخ داد: {e}")
 
     finally:
-      # ۶. پاک‌سازی فایل موقت پس از اتمام پردازش و اضافه شدن به Vector Store
       if is_temp_file and pdf_path and os.path.exists(pdf_path):
         os.remove(pdf_path)
 
+  # --- نمایش جدول تاریخچه فایل‌های آپلود شده ---
+  st.markdown("---")
+  st.subheader("📋 فایل‌های پردازش‌شده")
+
+  if st.session_state["processed_files"]:
+    st.dataframe(
+        st.session_state["processed_files"],
+        use_container_width=True,
+        hide_index=True,
+    )
+  else:
+    st.caption("هنوز فایلی پردازش نشده است.")
+
 # --- Main Interaction Section ---
-# ۷. بررسی دقیق عدم None بودن Collection
 if st.session_state["collection"] is not None:
   st.subheader("پرسش از PDF")
   user_question = st.text_area("سوال خود را اینجا وارد کنید:", height=100)
@@ -138,12 +153,10 @@ if st.session_state["collection"] is not None:
               st.session_state["collection"],
           )
 
-          # ۸. بررسی چک کردن retrieved_docs
           if not retrieved_docs:
             st.warning("هیچ بخشی از فایل PDF مرتبط با سوال شما پیدا نشد.")
             st.stop()
 
-          # ۱۲. مدیریت عدم وجود کلید API
           if not OPENROUTER_API_KEY:
             st.info("📌 بخش متون مرتبط از کتاب یافت شد:")
             for doc in retrieved_docs:
