@@ -12,15 +12,18 @@ def ask_rag_openrouter(question: str, context: List[str], pages: List[Dict[str, 
     messages = [
         {
             "role": "system",
-            "content": """
-            You are an expert ML professor. Answer the question accurately based ONLY on the provided context. If not found in context, say you don't know.
-            Format all mathematical expressions strictly using Markdown dollars: $math$ for inline equations and $$math$$ for display block equations. Do NOT use \( or \[ syntax. Inside markdown tables, keep all equations on a single line and avoid raw newlines within table cells.
-            """
+            "content": """You are an expert machine learning professor. Answer the question accurately based ONLY on the provided context. If the answer is not in the context, state that you don't know.
+    
+    CRITICAL FORMATTING RULES:
+    1. Use single dollar signs $...$ for all inline math equations.
+    2. Use double dollar signs $$...$$ ONLY for standalone display blocks outside tables.
+    3. NEVER use \\(...\\), \\[...\\] syntax, or the \\displaystyle command.
+    4. INSIDE MARKDOWN TABLES: Keep all text and equations strictly on a single line. Do NOT use multi-line elements, raw newlines, or block equations ($$...$$) inside any table cell. Use only simple inline math $...$ inside tables.""",
         },
         {
             "role": "user",
-            "content": f"Context:\n{context}\n\nQuestion: {question}"
-        }
+            "content": f"Context:\n{context}\n\nQuestion: {question}",
+        },
     ]
 
     print(f"🔍 Searching in pages: {pages}...")
@@ -34,33 +37,3 @@ def ask_rag_openrouter(question: str, context: List[str], pages: List[Dict[str, 
     return response.choices[0].message.content, pages
     
 
-def fix_llm_markdown(text: str) -> str:
-  # ۱. تبدیل فرمول‌های بلوکی \[ ... \] به $$ ... $$
-  text = re.sub(r"\\\[(.*?)\\\]", r"$$\1$$", text, flags=re.DOTALL)
-
-  # ۲. تبدیل فرمول‌های درون‌متنی \( ... \) به $ ... $
-  text = re.sub(r"\\\((.*?)\\\)", r"$\1$", text, flags=re.DOTALL)
-
-  # ۳. حل مشکل شکستن خطوط لاتخ داخل جدول‌های Markdown (جلوگیری از به‌هم‌ریختگی ستون‌ها)
-  lines = text.split("\n")
-  in_table = False
-  fixed_lines = []
-
-  for line in lines:
-    if "|" in line:
-      in_table = True
-      # حذف Newlineهای احتمالی و جایگزینی [ ] اضافه داخل جداول
-      line = re.sub(r"\[\s*", "$$", line)
-      line = re.sub(r"\s*\]", "$$", line)
-      fixed_lines.append(line)
-    else:
-      in_table = False
-      fixed_lines.append(line)
-
-  text = "\n".join(fixed_lines)
-
-  # ۴. جایگزینی کاراکترهای [ و ] تنهای باقی‌مانده که دور فرمول‌ها قرار گرفته‌اند
-  text = re.sub(r"(?m)^\s*\[\s*", "$$\n", text)
-  text = re.sub(r"(?m)^\s*\]\s*", "\n$$", text)
-
-  return text
