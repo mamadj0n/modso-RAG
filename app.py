@@ -3,7 +3,7 @@ import os
 from download_and_setup import install_and_load_dependencies, download_pdf
 from vector_store import process_pdf_into_vector_store
 from retriever import retrieve_relevant_chunks
-from llm_service import ask_rag_openrouter , fix_llm_markdown
+from llm_service import ask_rag_openrouter 
 
 # --- Streamlit UI --- 
 st.set_page_config(page_title="RAG System", layout="wide")
@@ -80,7 +80,7 @@ if st.session_state['pdf_downloaded'] and st.session_state['collection']:
                         metadatas,
                         OPENROUTER_API_KEY
                     )
-                    answer = fix_llm_markdown(answer)
+                    
                     st.markdown("### پاسخ AI:")
                     st.markdown(answer)
 
