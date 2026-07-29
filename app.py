@@ -67,7 +67,7 @@ if st.session_state['pdf_downloaded'] and st.session_state['collection']:
 
     if st.button("پرسیدن سوال"):
         if user_question:
-            try:
+            #try:
                 with st.spinner("در حال جستجو و تولید پاسخ..."):
                     retrieved_docs, metadatas = retrieve_relevant_chunks(
                         user_question,
